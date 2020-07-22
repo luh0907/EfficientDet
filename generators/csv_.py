@@ -284,6 +284,9 @@ class CSVGenerator(Generator):
         Load an image at the image_index.
         """
         image = cv2.imread(self.image_path(image_index))
+        if image is None:
+            return None
+
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         return image
 
