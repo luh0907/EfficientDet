@@ -457,12 +457,14 @@ def efficientdet(phi, num_classes=20, num_anchors=9, weighted_bifpn=False, freez
     if detect_quadrangle:
         detections = FilterDetections(
             name='filtered_detections',
+            max_detections=256,
             score_threshold=score_threshold,
             detect_quadrangle=True
         )([boxes, classification, regression[..., 4:8], regression[..., 8]])
     else:
         detections = FilterDetections(
             name='filtered_detections',
+            max_detections=256,
             score_threshold=score_threshold
         )([boxes, classification])
 
