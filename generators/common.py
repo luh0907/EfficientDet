@@ -2,6 +2,7 @@ import numpy as np
 import random
 import warnings
 import cv2
+import copy
 from tensorflow import keras
 
 from utils.anchors import anchors_for_shape, anchor_targets_bbox, AnchorParameters
@@ -222,7 +223,24 @@ class Generator(keras.utils.Sequence):
         """
         Load images for all images in a group.
         """
-        return [self.load_image(image_index) for image_index in group]
+        image_group = []
+        last_success_idx = None
+        for idx, image_index in enumerate(group):
+            img = self.load_image(image_index)
+            if not img is None:
+                last_success_idx = idx
+            image_group.append(img)
+
+        assert not last_success_idx is None
+
+        for idx, img in enumerate(image_group):
+            if not img is None:
+                continue
+            image_group[idx] = copy.deepcopy(image_group[last_success_idx])
+            group[idx] = group[last_success_idx]
+
+        # image_group = [self.load_image(image_index) for image_index in group]
+        return image_group
 
     def random_visual_effect_group_entry(self, image, annotations):
         """
