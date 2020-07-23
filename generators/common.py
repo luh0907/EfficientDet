@@ -231,11 +231,14 @@ class Generator(keras.utils.Sequence):
                 last_success_idx = idx
             image_group.append(img)
 
-        assert not last_success_idx is None
+        if last_success_idx is None:
+            warnings.warn("Failed to load batch with image ids: {}. Trying to load another batch...".format(str(group)))
+            return []
 
         for idx, img in enumerate(image_group):
             if not img is None:
                 continue
+            warnings.warn("Failed to load image with id {}. Load image with id {} instead.".format(group[idx], group[last_success_idx]))
             image_group[idx] = copy.deepcopy(image_group[last_success_idx])
             group[idx] = group[last_success_idx]
 
@@ -389,6 +392,11 @@ class Generator(keras.utils.Sequence):
         # load images and annotations
         # list
         image_group = self.load_image_group(group)
+        if len(image_group) == 0:
+            if debug:
+                return None, None, None
+            return None, None
+
         annotations_group = self.load_annotations_group(group)
 
         # check validity of annotations
@@ -440,6 +448,10 @@ class Generator(keras.utils.Sequence):
         """
         group = self.groups[index]
         inputs, targets = self.compute_inputs_targets(group)
+        while inputs is None:   # Batch images not loaded
+            group = random.choice(self.groups)
+            inputs, targets = self.compute_inputs_targets(group)
+
         return inputs, targets
 
     def preprocess_image(self, image):
